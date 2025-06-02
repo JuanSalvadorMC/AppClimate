@@ -1,7 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 interface WeatherData {
   name: string;
@@ -9,6 +19,26 @@ interface WeatherData {
     temp: number;
     humidity: number;
     feels_like: number;
+    temp_min: number;
+    temp_max: number;
+  };
+  weather: Array<{
+    description: string;
+    icon: string;
+  }>;
+  wind: {
+    speed: number;
+  };
+  dt: number;
+}
+
+interface ForecastData {
+  dt: number;
+  main: {
+    temp: number;
+    temp_min: number;
+    temp_max: number;
+    humidity: number;
   };
   weather: Array<{
     description: string;
@@ -19,48 +49,149 @@ interface WeatherData {
   };
 }
 
+interface CitySuggestion {
+  name: string;
+  country: string;
+  state?: string;
+}
+
+type ChartDataType = 'temperature' | 'humidity' | 'wind';
+
 export default function WeatherSearch() {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [forecast, setForecast] = useState<ForecastData[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [chartType, setChartType] = useState<ChartDataType>('temperature');
 
   const API_KEY = '729d536913428102ed055faf12ed693b';
 
-  const searchWeather = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!city.trim()) return;
-
-    setLoading(true);
-    setError('');
+  const getCitySuggestions = async (query: string) => {
+    if (query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
 
     try {
       const response = await axios.get(
-        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=es`
+        `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${API_KEY}`
       );
-      setWeather(response.data);
-    } catch (err) {
+      setSuggestions(response.data);
+    } catch (error) {
+      console.error('Error al obtener sugerencias:', error);
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (city.trim()) {
+        getCitySuggestions(city);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [city]);
+
+  const searchWeather = async (cityName: string) => {
+    if (!cityName.trim()) {
+      setError('Por favor, ingresa el nombre de una ciudad');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setShowSuggestions(false);
+
+    try {
+      // Obtener clima actual
+      const weatherResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${API_KEY}&units=metric&lang=es`
+      );
+      setWeather(weatherResponse.data);
+
+      // Obtener pronóstico de 5 días
+      const forecastResponse = await axios.get(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${API_KEY}&units=metric&lang=es`
+      );
+      setForecast(forecastResponse.data.list);
+    } catch (error) {
       setError('Ciudad no encontrada. Por favor, intenta con otro nombre.');
       setWeather(null);
+      setForecast([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSuggestionClick = (suggestion: CitySuggestion) => {
+    setCity(suggestion.name);
+    searchWeather(suggestion.name);
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString('es-ES', {
+      weekday: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getChartData = () => {
+    return forecast.map(item => ({
+      date: formatDate(item.dt),
+      temperatura: Math.round(item.main.temp),
+      tempMin: Math.round(item.main.temp_min),
+      tempMax: Math.round(item.main.temp_max),
+      humedad: item.main.humidity,
+      viento: item.wind.speed
+    }));
+  };
+
   return (
-    <div className="max-w-md mx-auto p-4">
-      <form onSubmit={searchWeather} className="mb-4">
+    <div className="max-w-4xl mx-auto p-4">
+      <form 
+        onSubmit={(e) => {
+          e.preventDefault();
+          searchWeather(city);
+        }} 
+        className="mb-4 relative"
+      >
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Ingresa el nombre de la ciudad"
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Ingresa el nombre de la ciudad"
+              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                {suggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    className="p-2 hover:bg-blue-50 cursor-pointer"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    <div className="font-medium">{suggestion.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {suggestion.state ? `${suggestion.state}, ` : ''}
+                      {suggestion.country}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !city.trim()}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
           >
             {loading ? 'Buscando...' : 'Buscar'}
@@ -75,22 +206,29 @@ export default function WeatherSearch() {
       )}
 
       {weather && (
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">{weather.name}</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+        <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">{weather.name}</h2>
+            <img
+              src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+              alt={weather.weather[0].description}
+              className="w-16 h-16"
+            />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-600">Temperatura</p>
               <p className="text-2xl font-semibold">{Math.round(weather.main.temp)}°C</p>
             </div>
-            <div>
+            <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-600">Sensación térmica</p>
               <p className="text-2xl font-semibold">{Math.round(weather.main.feels_like)}°C</p>
             </div>
-            <div>
+            <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-600">Humedad</p>
               <p className="text-2xl font-semibold">{weather.main.humidity}%</p>
             </div>
-            <div>
+            <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-gray-600">Viento</p>
               <p className="text-2xl font-semibold">{weather.wind.speed} m/s</p>
             </div>
@@ -98,6 +236,89 @@ export default function WeatherSearch() {
           <div className="mt-4">
             <p className="text-gray-600">Condición</p>
             <p className="text-xl capitalize">{weather.weather[0].description}</p>
+          </div>
+        </div>
+      )}
+
+      {forecast.length > 0 && (
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold">Pronóstico de 5 días</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setChartType('temperature')}
+                className={`px-3 py-1 rounded ${
+                  chartType === 'temperature' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                Temperatura
+              </button>
+              <button
+                onClick={() => setChartType('humidity')}
+                className={`px-3 py-1 rounded ${
+                  chartType === 'humidity' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                Humedad
+              </button>
+              <button
+                onClick={() => setChartType('wind')}
+                className={`px-3 py-1 rounded ${
+                  chartType === 'wind' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                }`}
+              >
+                Viento
+              </button>
+            </div>
+          </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={getChartData()}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                {chartType === 'temperature' && (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="temperatura"
+                      stroke="#3B82F6"
+                      name="Temperatura"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="tempMin"
+                      stroke="#60A5FA"
+                      name="Mínima"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="tempMax"
+                      stroke="#2563EB"
+                      name="Máxima"
+                    />
+                  </>
+                )}
+                {chartType === 'humidity' && (
+                  <Line
+                    type="monotone"
+                    dataKey="humedad"
+                    stroke="#10B981"
+                    name="Humedad (%)"
+                  />
+                )}
+                {chartType === 'wind' && (
+                  <Line
+                    type="monotone"
+                    dataKey="viento"
+                    stroke="#6366F1"
+                    name="Velocidad del viento (m/s)"
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}
