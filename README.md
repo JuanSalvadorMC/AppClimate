@@ -2,7 +2,7 @@
 
 Una aplicación web moderna para consultar el clima en tiempo real de cualquier ciudad del mundo, con funcionalidades como ciudades favoritas, pronóstico extendido y visualización de datos meteorológicos.
 
-## 🚀 Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
 - **Next.js 14** - Framework de React para desarrollo web
 - **TypeScript** - Superset tipado de JavaScript
@@ -12,13 +12,14 @@ Una aplicación web moderna para consultar el clima en tiempo real de cualquier 
 - **Font Awesome** - Iconos vectoriales
 - **OpenWeatherMap API** - API de datos meteorológicos
 
-## 📋 Prerrequisitos
+##  Prerrequisitos
 
 - Node.js 18.0.0 o superior
 - npm o yarn
 - Cuenta en OpenWeatherMap (para obtener API key)
+- Cuenta en GitHub
 
-## 🔧 Instalación
+##  Instalación
 
 1. Clona el repositorio:
 ```bash
@@ -35,10 +36,10 @@ yarn install
 
 3. Crea un archivo `.env.local` en la raíz del proyecto y agrega tu API key:
 ```env
-NEXT_PUBLIC_WEATHER_API_KEY=tu_api_key_aqui
+NEXT_PUBLIC_WEATHER_API_KEY= 729d536913428102ed055faf12ed693b
 ```
 
-## 🚀 Ejecución
+##  Ejecución
 
 Para ejecutar el proyecto en modo desarrollo:
 
@@ -60,7 +61,10 @@ yarn build
 yarn start
 ```
 
-## 🔑 API Key de Prueba
+
+Disponible en: `https://tu-usuario.github.io/app-clima`
+
+##  API Key de Prueba
 
 Para desarrollo y pruebas, puedes usar la siguiente API key:
 ```
@@ -69,7 +73,7 @@ Para desarrollo y pruebas, puedes usar la siguiente API key:
 
 **Nota**: Esta es una API key de prueba con límites de uso. Para un entorno de producción, se recomienda obtener tu propia API key en [OpenWeatherMap](https://openweathermap.org/api).
 
-## 🌟 Características
+##  Características
 
 - Búsqueda de ciudades con autocompletado
 - Visualización del clima actual
@@ -80,7 +84,7 @@ Para desarrollo y pruebas, puedes usar la siguiente API key:
 - Tema claro/oscuro
 - Animaciones y transiciones suaves
 
-## 📱 Uso
+##  Uso
 
 1. Ingresa el nombre de una ciudad en el buscador
 2. Selecciona la ciudad de las sugerencias
@@ -88,7 +92,7 @@ Para desarrollo y pruebas, puedes usar la siguiente API key:
 4. Agrega ciudades a favoritos usando el botón de corazón
 5. Accede a tus ciudades favoritas desde el panel lateral
 
-## 🤝 Contribuir
+##  Contribuir
 
 Las contribuciones son bienvenidas. Para contribuir:
 
@@ -98,10 +102,6 @@ Las contribuciones son bienvenidas. Para contribuir:
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
 
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE.md](LICENSE.md) para más detalles.
-
-## 📞 Soporte
+## Soporte
 
 Si encuentras algún problema o tienes alguna sugerencia, por favor abre un issue en el repositorio.
