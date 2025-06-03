@@ -209,7 +209,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
               onChange={(e) => setCity(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
               placeholder="Buscar ciudad..."
-              className="w-full p-2 pr-10 border-none border-b border-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-gray-500"
+              className="w-full p-2 pr-10 border-none border-b border-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-gray-500 cursor-text"
               style={{ borderBottom: '1px solid gray' }}
             />
             {city && (
@@ -220,7 +220,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
                   setForecast([]);
                   setError('');
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-300 cursor-pointer p-1"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-all duration-300 cursor-pointer p-1 hover:scale-110"
                 title="Limpiar búsqueda"
               >
                 <i className="fas fa-times text-lg"></i>
@@ -229,7 +229,8 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
           </div>
           <button
             onClick={() => searchWeather(city)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 rounded-lg transition-all duration-300 cursor-pointer hover:scale-105"
+            style={{ backgroundColor: '#4e6c7b', cursor: 'pointer', color: 'rgb(197 199 207)' }}
           >
             Buscar
           </button>
@@ -241,7 +242,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
               <button
                 key={`${suggestion.name}-${index}`}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors flex items-center gap-2"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-all duration-300 cursor-pointer flex items-center gap-2 hover:translate-x-1"
               >
                 <i className="fas fa-map-marker-alt text-gray-400"></i>
                 <div>
@@ -283,7 +284,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
                 setForecast([]);
                 setCity('');
               }}
-              className="p-0 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              className="p-0 text-gray-400 hover:text-gray-600 transition-all duration-300 cursor-pointer hover:scale-110"
               title="Cerrar"
             >
               <i className="fas fa-times text-3xl"></i>
@@ -301,26 +302,26 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
             </div>
             <button
               onClick={handleAddToFavorites}
-              className="p-2 text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+              className="p-2 text-red-500 hover:text-red-600 transition-all duration-300 cursor-pointer hover:scale-110"
               title={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
             >
               <i className={`fas fa-heart text-4xl ${isFavorite ? 'text-red-500' : 'text-gray-300'} hover:text-red-600 transition-colors`}></i>
             </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer hover:bg-blue-100">
               <p className="text-gray-600">Temperatura</p>
               <p className="text-2xl font-semibold">{Math.round(weather.main.temp)}°C</p>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer hover:bg-blue-100">
               <p className="text-gray-600">Sensación térmica</p>
               <p className="text-2xl font-semibold">{Math.round(weather.main.feels_like)}°C</p>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer hover:bg-blue-100">
               <p className="text-gray-600">Humedad</p>
               <p className="text-2xl font-semibold">{weather.main.humidity}%</p>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 p-4 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg cursor-pointer hover:bg-blue-100">
               <p className="text-gray-600">Viento</p>
               <p className="text-2xl font-semibold">{weather.wind.speed} m/s</p>
             </div>
