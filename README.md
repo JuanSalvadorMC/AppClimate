@@ -61,6 +61,11 @@ Disponible en:
 `https://tu-usuario.github.io/app-clima`
 `https://buscador-de-imagenes-react.vercel.app/`
 
+⚠️ **Nota sobre el despliegue:**  
+> Actualmente, el despliegue en producción no es completamente funcional debido a configuraciones adicionales requeridas.
+  
+> Por esta razón, se recomienda clonar el repositorio y ejecutar el proyecto de forma local para asegurar el correcto funcionamiento y poder realizar pruebas sin inconvenientes.
+
 ##  API Key de Prueba
 
 Para desarrollo y pruebas, puedes usar la siguiente API key:
