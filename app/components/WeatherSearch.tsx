@@ -57,8 +57,21 @@ interface CitySuggestion {
 
 type ChartDataType = 'temperature' | 'humidity' | 'wind';
 
-export default function WeatherSearch() {
-  const [city, setCity] = useState('');
+interface DailyForecast {
+  date: string;
+  temperatura: number;
+  tempMin: number;
+  tempMax: number;
+  humedad: number;
+  viento: number;
+}
+
+interface WeatherSearchProps {
+  initialCity?: string;
+}
+
+export default function WeatherSearch({ initialCity }: WeatherSearchProps) {
+  const [city, setCity] = useState(initialCity || '');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [forecast, setForecast] = useState<ForecastData[]>([]);
   const [error, setError] = useState('');
@@ -95,6 +108,12 @@ export default function WeatherSearch() {
     return () => clearTimeout(timeoutId);
   }, [city]);
 
+  useEffect(() => {
+    if (initialCity) {
+      searchWeather(initialCity);
+    }
+  }, [initialCity]);
+
   const searchWeather = async (cityName: string) => {
     if (!cityName.trim()) {
       setError('Por favor, ingresa el nombre de una ciudad');
@@ -116,8 +135,10 @@ export default function WeatherSearch() {
       const forecastResponse = await axios.get(
         `https://api.openweathermap.org/data/2.5/forecast?q=${cityName}&appid=${API_KEY}&units=metric&lang=es`
       );
+      console.log('Datos del pronóstico:', forecastResponse.data.list);
       setForecast(forecastResponse.data.list);
-    } catch (error) {
+    } catch (err) {
+      console.error('Error en la búsqueda:', err);
       setError('Ciudad no encontrada. Por favor, intenta con otro nombre.');
       setWeather(null);
       setForecast([]);
@@ -139,7 +160,10 @@ export default function WeatherSearch() {
   };
 
   const getChartData = () => {
-    return forecast.map(item => ({
+    // Tomar solo un pronóstico por día (cada 8 elementos, ya que la API devuelve datos cada 3 horas)
+    const dailyForecasts = forecast.filter((_, index) => index % 8 === 0);
+    
+    const chartData = dailyForecasts.map(item => ({
       date: formatDate(item.dt),
       temperatura: Math.round(item.main.temp),
       tempMin: Math.round(item.main.temp_min),
@@ -147,6 +171,9 @@ export default function WeatherSearch() {
       humedad: item.main.humidity,
       viento: item.wind.speed
     }));
+
+    console.log('Datos para el gráfico:', chartData);
+    return chartData;
   };
 
   return (
@@ -273,11 +300,23 @@ export default function WeatherSearch() {
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getChartData()}>
+              <LineChart
+                data={getChartData()}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
+                <XAxis 
+                  dataKey="date"
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Temperatura (°C)', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  formatter={(value: number) => [`${value}°C`, '']}
+                  labelFormatter={(label) => `Fecha: ${label}`}
+                />
                 <Legend />
                 {chartType === 'temperature' && (
                   <>
@@ -285,19 +324,28 @@ export default function WeatherSearch() {
                       type="monotone"
                       dataKey="temperatura"
                       stroke="#3B82F6"
-                      name="Temperatura"
+                      name="Temperatura Actual"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="tempMin"
                       stroke="#60A5FA"
-                      name="Mínima"
+                      name="Temperatura Mínima"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="tempMax"
                       stroke="#2563EB"
-                      name="Máxima"
+                      name="Temperatura Máxima"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
                     />
                   </>
                 )}
@@ -307,6 +355,9 @@ export default function WeatherSearch() {
                     dataKey="humedad"
                     stroke="#10B981"
                     name="Humedad (%)"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                 )}
                 {chartType === 'wind' && (
@@ -315,6 +366,9 @@ export default function WeatherSearch() {
                     dataKey="viento"
                     stroke="#6366F1"
                     name="Velocidad del viento (m/s)"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                 )}
               </LineChart>
