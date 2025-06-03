@@ -55,17 +55,6 @@ interface CitySuggestion {
   state?: string;
 }
 
-type ChartDataType = 'temperature' | 'humidity' | 'wind';
-
-interface DailyForecast {
-  date: string;
-  temperatura: number;
-  tempMin: number;
-  tempMax: number;
-  humedad: number;
-  viento: number;
-}
-
 interface WeatherSearchProps {
   initialCity?: string;
   onAddToFavorites?: (city: string) => void;
@@ -79,7 +68,6 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [chartType, setChartType] = useState<ChartDataType>('temperature');
 
   const API_KEY = '729d536913428102ed055faf12ed693b';
 
@@ -110,7 +98,8 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
   }, [city]);
 
   useEffect(() => {
-    if (initialCity) {
+    if (initialCity && initialCity !== city) {
+      setCity(initialCity);
       searchWeather(initialCity);
     }
   }, [initialCity]);
@@ -166,14 +155,10 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
     
     const chartData = dailyForecasts.map(item => ({
       date: formatDate(item.dt),
-      temperatura: Math.round(item.main.temp),
-      tempMin: Math.round(item.main.temp_min),
       tempMax: Math.round(item.main.temp_max),
-      humedad: item.main.humidity,
-      viento: item.wind.speed
+      tempMin: Math.round(item.main.temp_min)
     }));
 
-    console.log('Datos para el gráfico:', chartData);
     return chartData;
   };
 
@@ -184,7 +169,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="w-full">
       <form 
         onSubmit={(e) => {
           e.preventDefault();
@@ -226,7 +211,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
           <button
             type="submit"
             disabled={loading || !city.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300 cursor-pointer disabled:cursor-not-allowed"
           >
             {loading ? 'Buscando...' : 'Buscar'}
           </button>
@@ -251,7 +236,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
               />
               <button
                 onClick={handleAddToFavorites}
-                className="p-2 text-red-500 hover:text-red-600 transition-colors"
+                className="p-2 text-red-500 hover:text-red-600 transition-colors cursor-pointer"
                 title="Agregar a favoritos"
               >
                 <svg
@@ -300,32 +285,6 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold">Pronóstico de 5 días</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setChartType('temperature')}
-                className={`px-3 py-1 rounded ${
-                  chartType === 'temperature' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
-              >
-                Temperatura
-              </button>
-              <button
-                onClick={() => setChartType('humidity')}
-                className={`px-3 py-1 rounded ${
-                  chartType === 'humidity' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
-              >
-                Humedad
-              </button>
-              <button
-                onClick={() => setChartType('wind')}
-                className={`px-3 py-1 rounded ${
-                  chartType === 'wind' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                }`}
-              >
-                Viento
-              </button>
-            </div>
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -340,66 +299,35 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
                 />
                 <YAxis 
                   tick={{ fontSize: 12 }}
-                  label={{ value: 'Temperatura (°C)', angle: -90, position: 'insideLeft' }}
+                  label={{ 
+                    value: 'Temperatura (°C)',
+                    angle: -90,
+                    position: 'insideLeft'
+                  }}
                 />
                 <Tooltip 
                   formatter={(value: number) => [`${value}°C`, '']}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
                 <Legend />
-                {chartType === 'temperature' && (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="temperatura"
-                      stroke="#3B82F6"
-                      name="Temperatura Actual"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="tempMin"
-                      stroke="#60A5FA"
-                      name="Temperatura Mínima"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="tempMax"
-                      stroke="#2563EB"
-                      name="Temperatura Máxima"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </>
-                )}
-                {chartType === 'humidity' && (
-                  <Line
-                    type="monotone"
-                    dataKey="humedad"
-                    stroke="#10B981"
-                    name="Humedad (%)"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                )}
-                {chartType === 'wind' && (
-                  <Line
-                    type="monotone"
-                    dataKey="viento"
-                    stroke="#6366F1"
-                    name="Velocidad del viento (m/s)"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                )}
+                <Line
+                  type="monotone"
+                  dataKey="tempMax"
+                  stroke="#EF4444"
+                  name="Temperatura Máxima"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="tempMin"
+                  stroke="#3B82F6"
+                  name="Temperatura Mínima"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>

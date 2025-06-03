@@ -2,15 +2,18 @@
 
 import WeatherSearch from './components/WeatherSearch';
 import FavoriteCities from './components/FavoriteCities';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const [selectedCity, setSelectedCity] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  const handleCitySelect = (city: string) => {
-    setSelectedCity(city);
-  };
+  useEffect(() => {
+    // Cargar favoritos del localStorage al iniciar
+    const savedFavorites = localStorage.getItem('favoriteCities');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
 
   const handleAddToFavorites = (city: string) => {
     if (!favorites.includes(city)) {
@@ -29,13 +32,11 @@ export default function Home() {
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-8">
             <WeatherSearch 
-              initialCity={selectedCity} 
               onAddToFavorites={handleAddToFavorites}
             />
           </div>
           <div className="col-span-4">
             <FavoriteCities 
-              onSelectCity={handleCitySelect}
               favorites={favorites}
               onFavoritesChange={setFavorites}
             />
