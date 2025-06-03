@@ -26,11 +26,12 @@ interface FavoriteCitiesProps {
 export default function FavoriteCities({ favorites, onFavoritesChange }: FavoriteCitiesProps) {
   const [weatherData, setWeatherData] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState<string | null>(null);
+  const [expandedCity, setExpandedCity] = useState<string | null>(null);
 
   const API_KEY = '729d536913428102ed055faf12ed693b';
 
   const fetchWeatherData = async (city: string) => {
-    if (weatherData[city]) return; // Si ya tenemos los datos, no los volvemos a cargar
+    if (weatherData[city]) return;
 
     setLoading(city);
     try {
@@ -97,7 +98,10 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
               className="bg-gray-50 rounded-lg overflow-hidden group"
               onMouseEnter={() => fetchWeatherData(city)}
             >
-              <div className="flex items-center justify-between p-2 hover:bg-gray-100 transition-colors">
+              <div 
+                className={`flex items-center justify-between p-2 transition-all duration-300 ${expandedCity === city ? 'bg-gray-200' : 'hover:bg-gray-100 hover:scale-[1.02]'}`}
+                onClick={() => setExpandedCity(expandedCity === city ? null : city)}
+              >
                 <div className="flex items-center gap-2 flex-1 text-left hover:text-blue-500 cursor-pointer">
                   {city}
                   {weatherData[city] && (
@@ -105,26 +109,21 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
                   )}
                 </div>
                 <button
-                  onClick={() => removeFavorite(city)}
-                  className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFavorite(city);
+                  }}
+                  className="p-1 text-gray-400 hover:text-red-500 transition-colors duration-700 cursor-pointer"
                   title="Eliminar de favoritos"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <div className="w-6 h-6 rounded-full border-2 border-current flex items-center justify-center">
+                    <span className="text-sm font-bold">−</span>
+                  </div>
                 </button>
               </div>
               
-              <div className="max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96">
+              {/* Panel de detalles para click */}
+              <div className={`max-h-0 overflow-hidden transition-all duration-1000 ease-in-out ${expandedCity === city ? 'max-h-96' : ''}`}>
                 {loading === city ? (
                   <div className="text-center py-2">Cargando...</div>
                 ) : weatherData[city] ? (
@@ -144,10 +143,6 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Viento:</span>
                       <span className="font-semibold">{weatherData[city].wind.speed} m/s</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Condición:</span>
-                      <span className="font-semibold capitalize">{weatherData[city].weather[0].description}</span>
                     </div>
                   </div>
                 ) : (

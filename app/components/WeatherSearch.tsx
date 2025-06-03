@@ -12,6 +12,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import PopularCities from './PopularCities';
 
 interface WeatherData {
   name: string;
@@ -198,63 +199,96 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
   const isFavorite = weather ? favorites.includes(weather.name) : false;
 
   return (
-    <div className="w-full">
-      <form 
-        onSubmit={(e) => {
-          e.preventDefault();
-          searchWeather(city);
-        }} 
-        className="mb-4 relative"
-      >
-        <div className="flex gap-2">
+    <div className="w-full max-w-4xl mx-auto p-4">
+      <div className="relative">
+        <div className="flex gap-2 mb-4">
           <div className="flex-1 relative">
             <input
               type="text"
               value={city}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setShowSuggestions(true);
-              }}
+              onChange={(e) => setCity(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="Ingresa el nombre de la ciudad"
-              className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Buscar ciudad..."
+              className="w-full p-2 pr-10 border-none border-b border-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-gray-500"
+              style={{ borderBottom: '1px solid gray' }}
             />
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-                {suggestions.map((suggestion, index) => (
-                  <div
-                    key={index}
-                    className="p-2 hover:bg-blue-50 cursor-pointer"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    <div className="font-medium">{suggestion.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {suggestion.state ? `${suggestion.state}, ` : ''}
-                      {suggestion.country}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {city && (
+              <button
+                onClick={() => {
+                  setCity('');
+                  setWeather(null);
+                  setForecast([]);
+                  setError('');
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-300 cursor-pointer p-1"
+                title="Limpiar búsqueda"
+              >
+                <i className="fas fa-times text-lg"></i>
+              </button>
             )}
           </div>
           <button
-            type="submit"
-            disabled={loading || !city.trim()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-blue-300 cursor-pointer disabled:cursor-not-allowed"
+            onClick={() => searchWeather(city)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            {loading ? 'Buscando...' : 'Buscar'}
+            Buscar
           </button>
         </div>
-      </form>
+
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute z-10 w-full bg-white rounded-lg shadow-lg border border-gray-200 mt-1">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={`${suggestion.name}-${index}`}
+                onClick={() => handleSuggestionClick(suggestion)}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors flex items-center gap-2"
+              >
+                <i className="fas fa-map-marker-alt text-gray-400"></i>
+                <div>
+                  <div className="font-medium">{suggestion.name}</div>
+                  <div className="text-sm text-gray-500">
+                    {suggestion.state ? `${suggestion.state}, ` : ''}
+                    {suggestion.country}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {error && (
-        <div className="p-3 bg-red-100 text-red-700 rounded-lg mb-4">
-          {error}
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
+
+      {loading && (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
         </div>
+      )}
+
+      {!weather && !loading && (
+        <PopularCities onCityClick={(city) => {
+          setCity(city);
+          searchWeather(city);
+        }} />
       )}
 
       {weather && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => {
+                setWeather(null);
+                setForecast([]);
+                setCity('');
+              }}
+              className="p-0 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              title="Cerrar"
+            >
+              <i className="fas fa-times text-3xl"></i>
+            </button>
+          </div>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div>
