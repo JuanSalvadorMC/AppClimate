@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface WeatherData {
@@ -18,6 +18,10 @@ interface WeatherData {
   };
 }
 
+interface ErrorState {
+  [key: string]: string;
+}
+
 interface FavoriteCitiesProps {
   favorites: string[];
   onFavoritesChange: (favorites: string[]) => void;
@@ -27,6 +31,7 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
   const [weatherData, setWeatherData] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState<string | null>(null);
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
+  const [errors, setErrors] = useState<ErrorState>({});
 
   const API_KEY = '729d536913428102ed055faf12ed693b';
 
@@ -34,6 +39,8 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
     if (weatherData[city]) return;
 
     setLoading(city);
+    setErrors(prev => ({ ...prev, [city]: '' })); // Limpiar error previo
+
     try {
       const response = await axios.get(
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=es`
@@ -43,16 +50,61 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
         [city]: response.data
       }));
     } catch (error) {
-      console.error('Error al obtener el clima:', error);
+      let errorMessage = 'Error al cargar el clima';
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 404:
+              errorMessage = 'Ciudad no encontrada';
+              break;
+            case 401:
+              errorMessage = 'Error de autenticación con la API';
+              break;
+            case 429:
+              errorMessage = 'Límite de peticiones excedido';
+              break;
+            case 500:
+              errorMessage = 'Error del servidor';
+              break;
+            default:
+              errorMessage = `Error ${error.response.status}: ${error.response.data.message || 'Error desconocido'}`;
+          }
+        } else if (error.request) {
+          errorMessage = 'No se pudo conectar con el servidor';
+        }
+      }
+      
+      setErrors(prev => ({ ...prev, [city]: errorMessage }));
+      console.error(`Error al obtener el clima para ${city}:`, error);
     } finally {
       setLoading(null);
     }
   };
 
+  // Cargar datos del clima al montar el componente y cuando cambien los favoritos
+  useEffect(() => {
+    favorites.forEach(city => {
+      fetchWeatherData(city);
+    });
+  }, [favorites]);
+
   const removeFavorite = (cityToRemove: string) => {
     const updatedFavorites = favorites.filter(city => city !== cityToRemove);
     onFavoritesChange(updatedFavorites);
     localStorage.setItem('favoriteCities', JSON.stringify(updatedFavorites));
+    
+    // Limpiar datos y errores de la ciudad eliminada
+    setWeatherData(prev => {
+      const newData = { ...prev };
+      delete newData[cityToRemove];
+      return newData;
+    });
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[cityToRemove];
+      return newErrors;
+    });
   };
 
   const getWeatherIcon = (iconCode: string) => {
@@ -96,7 +148,6 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
             <div
               key={city}
               className="bg-gray-50 rounded-lg overflow-hidden group"
-              onMouseEnter={() => fetchWeatherData(city)}
             >
               <div 
                 className={`flex items-center justify-between p-2 transition-all duration-300 ${expandedCity === city ? 'bg-gray-200' : 'hover:bg-gray-100 hover:scale-[1.02]'}`}
@@ -104,8 +155,14 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
               >
                 <div className="flex items-center gap-2 flex-1 text-left hover:text-blue-500 cursor-pointer">
                   {city}
-                  {weatherData[city] && (
+                  {loading === city ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  ) : weatherData[city] ? (
                     <i className={`fas fa-${getWeatherIcon(weatherData[city].weather[0].icon)} ${getTemperatureColor(weatherData[city].main.temp)}`}></i>
+                  ) : errors[city] ? (
+                    <i className="fas fa-exclamation-circle text-red-500" title={errors[city]}></i>
+                  ) : (
+                    <i className="fas fa-sun text-yellow-500"></i>
                   )}
                 </div>
                 <button
@@ -125,7 +182,10 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
               {/* Panel de detalles para click */}
               <div className={`max-h-0 overflow-hidden transition-all duration-1000 ease-in-out ${expandedCity === city ? 'max-h-96' : ''}`}>
                 {loading === city ? (
-                  <div className="text-center py-2">Cargando...</div>
+                  <div className="text-center py-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                    <p className="text-gray-600">Cargando datos del clima...</p>
+                  </div>
                 ) : weatherData[city] ? (
                   <div className="p-4 bg-white border-t space-y-3">
                     <div className="flex items-center justify-between">
@@ -145,8 +205,23 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
                       <span className="font-semibold">{weatherData[city].wind.speed} m/s</span>
                     </div>
                   </div>
+                ) : errors[city] ? (
+                  <div className="p-4 bg-white border-t">
+                    <div className="flex items-center justify-center gap-2 text-red-500">
+                      <i className="fas fa-exclamation-circle"></i>
+                      <p>{errors[city]}</p>
+                    </div>
+                    <button
+                      onClick={() => fetchWeatherData(city)}
+                      className="mt-2 w-full py-1 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
                 ) : (
-                  <div className="text-center py-2 text-red-500">Error al cargar el clima</div>
+                  <div className="text-center py-2 text-gray-500">
+                    No se pudieron cargar los datos del clima
+                  </div>
                 )}
               </div>
             </div>
