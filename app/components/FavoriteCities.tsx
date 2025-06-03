@@ -1,68 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-
 interface FavoriteCitiesProps {
   onSelectCity: (city: string) => void;
+  favorites: string[];
+  onFavoritesChange: (favorites: string[]) => void;
 }
 
-export default function FavoriteCities({ onSelectCity }: FavoriteCitiesProps) {
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [newCity, setNewCity] = useState('');
-
-  useEffect(() => {
-    // Cargar favoritos del localStorage al iniciar
-    const savedFavorites = localStorage.getItem('favoriteCities');
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
-    }
-  }, []);
-
-  const saveToLocalStorage = (cities: string[]) => {
-    localStorage.setItem('favoriteCities', JSON.stringify(cities));
-  };
-
-  const addFavorite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCity.trim()) return;
-
-    const cityToAdd = newCity.trim();
-    if (!favorites.includes(cityToAdd)) {
-      const updatedFavorites = [...favorites, cityToAdd];
-      setFavorites(updatedFavorites);
-      saveToLocalStorage(updatedFavorites);
-      setNewCity('');
-    }
-  };
-
+export default function FavoriteCities({ onSelectCity, favorites, onFavoritesChange }: FavoriteCitiesProps) {
   const removeFavorite = (cityToRemove: string) => {
     const updatedFavorites = favorites.filter(city => city !== cityToRemove);
-    setFavorites(updatedFavorites);
-    saveToLocalStorage(updatedFavorites);
+    onFavoritesChange(updatedFavorites);
+    localStorage.setItem('favoriteCities', JSON.stringify(updatedFavorites));
   };
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-lg mb-6">
       <h3 className="text-xl font-bold mb-4">Ciudades Favoritas</h3>
       
-      <form onSubmit={addFavorite} className="mb-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newCity}
-            onChange={(e) => setNewCity(e.target.value)}
-            placeholder="Agregar ciudad favorita"
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            Agregar
-          </button>
-        </div>
-      </form>
-
       {favorites.length > 0 ? (
         <div className="space-y-2">
           {favorites.map((city) => (
@@ -99,7 +53,7 @@ export default function FavoriteCities({ onSelectCity }: FavoriteCitiesProps) {
         </div>
       ) : (
         <p className="text-gray-500 text-center py-2">
-          No hay ciudades favoritas. ¡Agrega algunas!
+          No hay ciudades favoritas. ¡Agrega algunas usando el corazón!
         </p>
       )}
     </div>

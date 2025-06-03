@@ -6,9 +6,18 @@ import { useState } from 'react';
 
 export default function Home() {
   const [selectedCity, setSelectedCity] = useState('');
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   const handleCitySelect = (city: string) => {
     setSelectedCity(city);
+  };
+
+  const handleAddToFavorites = (city: string) => {
+    if (!favorites.includes(city)) {
+      const updatedFavorites = [...favorites, city];
+      setFavorites(updatedFavorites);
+      localStorage.setItem('favoriteCities', JSON.stringify(updatedFavorites));
+    }
   };
 
   return (
@@ -19,10 +28,17 @@ export default function Home() {
         </h1>
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-8">
-            <WeatherSearch initialCity={selectedCity} />
+            <WeatherSearch 
+              initialCity={selectedCity} 
+              onAddToFavorites={handleAddToFavorites}
+            />
           </div>
           <div className="col-span-4">
-            <FavoriteCities onSelectCity={handleCitySelect} />
+            <FavoriteCities 
+              onSelectCity={handleCitySelect}
+              favorites={favorites}
+              onFavoritesChange={setFavorites}
+            />
           </div>
         </div>
       </div>
