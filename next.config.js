@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/app-clima',
+  basePath: '/AppClimate',
   images: {
     unoptimized: true,
   },
