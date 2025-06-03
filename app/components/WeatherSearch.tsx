@@ -62,6 +62,8 @@ interface WeatherSearchProps {
   favorites?: string[];
 }
 
+type ViewType = 'temperature' | 'humidity' | 'wind';
+
 export default function WeatherSearch({ initialCity, onAddToFavorites, favorites = [] }: WeatherSearchProps) {
   const [city, setCity] = useState(initialCity || '');
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -70,6 +72,7 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [currentView, setCurrentView] = useState<ViewType>('temperature');
 
   const API_KEY = '729d536913428102ed055faf12ed693b';
 
@@ -152,16 +155,82 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
   };
 
   const getChartData = () => {
-    // Tomar solo un pronóstico por día (cada 8 elementos, ya que la API devuelve datos cada 3 horas)
     const dailyForecasts = forecast.filter((_, index) => index % 8 === 0);
     
     const chartData = dailyForecasts.map(item => ({
       date: formatDate(item.dt),
       tempMax: Math.round(item.main.temp_max),
-      tempMin: Math.round(item.main.temp_min)
+      tempMin: Math.round(item.main.temp_min),
+      humidity: item.main.humidity,
+      windSpeed: item.wind.speed
     }));
 
     return chartData;
+  };
+
+  const getChartLines = () => {
+    switch (currentView) {
+      case 'temperature':
+        return [
+          <Line
+            key="tempMax"
+            type="monotone"
+            dataKey="tempMax"
+            stroke="#EF4444"
+            name="Temperatura Máxima"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />,
+          <Line
+            key="tempMin"
+            type="monotone"
+            dataKey="tempMin"
+            stroke="#3B82F6"
+            name="Temperatura Mínima"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+        ];
+      case 'humidity':
+        return [
+          <Line
+            key="humidity"
+            type="monotone"
+            dataKey="humidity"
+            stroke="#10B981"
+            name="Humedad"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+        ];
+      case 'wind':
+        return [
+          <Line
+            key="windSpeed"
+            type="monotone"
+            dataKey="windSpeed"
+            stroke="#6366F1"
+            name="Velocidad del Viento"
+            strokeWidth={2}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
+          />
+        ];
+    }
+  };
+
+  const getYAxisLabel = () => {
+    switch (currentView) {
+      case 'temperature':
+        return 'Temperatura (°C)';
+      case 'humidity':
+        return 'Humedad (%)';
+      case 'wind':
+        return 'Velocidad del Viento (m/s)';
+    }
   };
 
   const handleAddToFavorites = () => {
@@ -333,6 +402,38 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold">Pronóstico de 5 días</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentView('temperature')}
+                className={`px-3 py-1 rounded-lg transition-all duration-300 cursor-pointer ${
+                  currentView === 'temperature'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Temperatura
+              </button>
+              <button
+                onClick={() => setCurrentView('humidity')}
+                className={`px-3 py-1 rounded-lg transition-all duration-300 cursor-pointer ${
+                  currentView === 'humidity'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Humedad
+              </button>
+              <button
+                onClick={() => setCurrentView('wind')}
+                className={`px-3 py-1 rounded-lg transition-all duration-300 cursor-pointer ${
+                  currentView === 'wind'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Viento
+              </button>
+            </div>
           </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -348,34 +449,26 @@ export default function WeatherSearch({ initialCity, onAddToFavorites, favorites
                 <YAxis 
                   tick={{ fontSize: 12 }}
                   label={{ 
-                    value: 'Temperatura (°C)',
+                    value: getYAxisLabel(),
                     angle: -90,
                     position: 'insideLeft'
                   }}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`${value}°C`, '']}
+                  formatter={(value: number) => {
+                    switch (currentView) {
+                      case 'temperature':
+                        return [`${value}°C`, ''];
+                      case 'humidity':
+                        return [`${value}%`, ''];
+                      case 'wind':
+                        return [`${value} m/s`, ''];
+                    }
+                  }}
                   labelFormatter={(label) => `Fecha: ${label}`}
                 />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="tempMax"
-                  stroke="#EF4444"
-                  name="Temperatura Máxima"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="tempMin"
-                  stroke="#3B82F6"
-                  name="Temperatura Mínima"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
+                {getChartLines()}
               </LineChart>
             </ResponsiveContainer>
           </div>

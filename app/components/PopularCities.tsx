@@ -9,13 +9,13 @@ export default function PopularCities({ onCityClick }: PopularCitiesProps) {
     { name: 'París', country: 'Francia', continent: 'Europa' },
     { name: 'Nueva York', country: 'Estados Unidos', continent: 'América' },
     { name: 'Tokio', country: 'Japón', continent: 'Asia' },
+    { name: 'Sídney', country: 'Australia', continent: 'Oceanía' },
+    { name: 'El Cairo', country: 'Egipto', continent: 'África' },
     { name: 'Roma', country: 'Italia', continent: 'Europa' },
     { name: 'Londres', country: 'Reino Unido', continent: 'Europa' },
     { name: 'Madrid', country: 'España', continent: 'Europa' },
-    { name: 'Sídney', country: 'Australia', continent: 'Oceanía' },
     { name: 'Barcelona', country: 'España', continent: 'Europa' },
     { name: 'Ciudad de México', country: 'México', continent: 'América' },
-    { name: 'El Cairo', country: 'Egipto', continent: 'África' },
     { name: 'Singapur', country: 'Singapur', continent: 'Asia' },
     { name: 'Toronto', country: 'Canadá', continent: 'América' }
   ];
