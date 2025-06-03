@@ -33,6 +33,7 @@ export default function Home() {
           <div className="col-span-8">
             <WeatherSearch 
               onAddToFavorites={handleAddToFavorites}
+              favorites={favorites}
             />
           </div>
           <div className="col-span-4">

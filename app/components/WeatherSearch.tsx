@@ -58,9 +58,10 @@ interface CitySuggestion {
 interface WeatherSearchProps {
   initialCity?: string;
   onAddToFavorites?: (city: string) => void;
+  favorites?: string[];
 }
 
-export default function WeatherSearch({ initialCity, onAddToFavorites }: WeatherSearchProps) {
+export default function WeatherSearch({ initialCity, onAddToFavorites, favorites = [] }: WeatherSearchProps) {
   const [city, setCity] = useState(initialCity || '');
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [forecast, setForecast] = useState<ForecastData[]>([]);
@@ -168,6 +169,34 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
     }
   };
 
+  const getWeatherIcon = (iconCode: string) => {
+    // Mapeo de códigos de OpenWeatherMap a clases de Font Awesome
+    const iconMap: { [key: string]: string } = {
+      '01d': 'sun',
+      '01n': 'moon',
+      '02d': 'cloud-sun',
+      '02n': 'cloud-moon',
+      '03d': 'cloud',
+      '03n': 'cloud',
+      '04d': 'cloud',
+      '04n': 'cloud',
+      '09d': 'cloud-showers-heavy',
+      '09n': 'cloud-showers-heavy',
+      '10d': 'cloud-sun-rain',
+      '10n': 'cloud-moon-rain',
+      '11d': 'bolt',
+      '11n': 'bolt',
+      '13d': 'snowflake',
+      '13n': 'snowflake',
+      '50d': 'smog',
+      '50n': 'smog'
+    };
+
+    return iconMap[iconCode] || 'sun';
+  };
+
+  const isFavorite = weather ? favorites.includes(weather.name) : false;
+
   return (
     <div className="w-full">
       <form 
@@ -227,34 +256,22 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
       {weather && (
         <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">{weather.name}</h2>
-            <div className="flex items-center gap-2">
-              <img
-                src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-                alt={weather.weather[0].description}
-                className="w-16 h-16"
-              />
-              <button
-                onClick={handleAddToFavorites}
-                className="p-2 text-red-500 hover:text-red-600 transition-colors cursor-pointer"
-                title="Agregar a favoritos"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-              </button>
+            <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">{weather.name}</h2>
+                <p className="text-2xl font-bold capitalize text-gray-600">
+                  {weather.weather[0].description}
+                </p>
+              </div>
+              <i className={`fas fa-${getWeatherIcon(weather.weather[0].icon)} text-4xl text-blue-500`}></i>
             </div>
+            <button
+              onClick={handleAddToFavorites}
+              className="p-2 text-red-500 hover:text-red-600 transition-colors cursor-pointer"
+              title={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+            >
+              <i className={`fas fa-heart text-4xl ${isFavorite ? 'text-red-500' : 'text-gray-300'} hover:text-red-600 transition-colors`}></i>
+            </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -273,10 +290,6 @@ export default function WeatherSearch({ initialCity, onAddToFavorites }: Weather
               <p className="text-gray-600">Viento</p>
               <p className="text-2xl font-semibold">{weather.wind.speed} m/s</p>
             </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-gray-600">Condición</p>
-            <p className="text-xl capitalize">{weather.weather[0].description}</p>
           </div>
         </div>
       )}

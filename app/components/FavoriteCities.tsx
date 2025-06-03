@@ -24,7 +24,6 @@ interface FavoriteCitiesProps {
 }
 
 export default function FavoriteCities({ favorites, onFavoritesChange }: FavoriteCitiesProps) {
-  const [expandedCity, setExpandedCity] = useState<string | null>(null);
   const [weatherData, setWeatherData] = useState<Record<string, WeatherData>>({});
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -49,22 +48,41 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
     }
   };
 
-  const handleCityClick = (city: string) => {
-    if (expandedCity === city) {
-      setExpandedCity(null);
-    } else {
-      setExpandedCity(city);
-      fetchWeatherData(city);
-    }
-  };
-
   const removeFavorite = (cityToRemove: string) => {
     const updatedFavorites = favorites.filter(city => city !== cityToRemove);
     onFavoritesChange(updatedFavorites);
     localStorage.setItem('favoriteCities', JSON.stringify(updatedFavorites));
-    if (expandedCity === cityToRemove) {
-      setExpandedCity(null);
-    }
+  };
+
+  const getWeatherIcon = (iconCode: string) => {
+    const iconMap: { [key: string]: string } = {
+      '01d': 'sun',
+      '01n': 'moon',
+      '02d': 'cloud-sun',
+      '02n': 'cloud-moon',
+      '03d': 'cloud',
+      '03n': 'cloud',
+      '04d': 'cloud',
+      '04n': 'cloud',
+      '09d': 'cloud-showers-heavy',
+      '09n': 'cloud-showers-heavy',
+      '10d': 'cloud-sun-rain',
+      '10n': 'cloud-moon-rain',
+      '11d': 'bolt',
+      '11n': 'bolt',
+      '13d': 'snowflake',
+      '13n': 'snowflake',
+      '50d': 'smog',
+      '50n': 'smog'
+    };
+
+    return iconMap[iconCode] || 'sun';
+  };
+
+  const getTemperatureColor = (temp: number) => {
+    if (temp <= 10) return 'text-blue-500'; // Frío
+    if (temp <= 25) return 'text-yellow-500'; // Templado
+    return 'text-red-500'; // Caliente
   };
 
   return (
@@ -76,15 +94,16 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
           {favorites.map((city) => (
             <div
               key={city}
-              className="bg-gray-50 rounded-lg overflow-hidden transition-all duration-300"
+              className="bg-gray-50 rounded-lg overflow-hidden group"
+              onMouseEnter={() => fetchWeatherData(city)}
             >
               <div className="flex items-center justify-between p-2 hover:bg-gray-100 transition-colors">
-                <button
-                  onClick={() => handleCityClick(city)}
-                  className="flex-1 text-left hover:text-blue-500 cursor-pointer"
-                >
+                <div className="flex items-center gap-2 flex-1 text-left hover:text-blue-500 cursor-pointer">
                   {city}
-                </button>
+                  {weatherData[city] && (
+                    <i className={`fas fa-${getWeatherIcon(weatherData[city].weather[0].icon)} ${getTemperatureColor(weatherData[city].main.temp)}`}></i>
+                  )}
+                </div>
                 <button
                   onClick={() => removeFavorite(city)}
                   className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
@@ -105,38 +124,36 @@ export default function FavoriteCities({ favorites, onFavoritesChange }: Favorit
                 </button>
               </div>
               
-              {expandedCity === city && (
-                <div className="p-4 bg-white border-t">
-                  {loading === city ? (
-                    <div className="text-center py-2">Cargando...</div>
-                  ) : weatherData[city] ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Temperatura:</span>
-                        <span className="font-semibold">{Math.round(weatherData[city].main.temp)}°C</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Sensación térmica:</span>
-                        <span className="font-semibold">{Math.round(weatherData[city].main.feels_like)}°C</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Humedad:</span>
-                        <span className="font-semibold">{weatherData[city].main.humidity}%</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Viento:</span>
-                        <span className="font-semibold">{weatherData[city].wind.speed} m/s</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Condición:</span>
-                        <span className="font-semibold capitalize">{weatherData[city].weather[0].description}</span>
-                      </div>
+              <div className="max-h-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-h-96">
+                {loading === city ? (
+                  <div className="text-center py-2">Cargando...</div>
+                ) : weatherData[city] ? (
+                  <div className="p-4 bg-white border-t space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Temperatura:</span>
+                      <span className="font-semibold">{Math.round(weatherData[city].main.temp)}°C</span>
                     </div>
-                  ) : (
-                    <div className="text-center py-2 text-red-500">Error al cargar el clima</div>
-                  )}
-                </div>
-              )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Sensación térmica:</span>
+                      <span className="font-semibold">{Math.round(weatherData[city].main.feels_like)}°C</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Humedad:</span>
+                      <span className="font-semibold">{weatherData[city].main.humidity}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Viento:</span>
+                      <span className="font-semibold">{weatherData[city].wind.speed} m/s</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600">Condición:</span>
+                      <span className="font-semibold capitalize">{weatherData[city].weather[0].description}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-2 text-red-500">Error al cargar el clima</div>
+                )}
+              </div>
             </div>
           ))}
         </div>
