@@ -45,7 +45,7 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/assets/acua.jpg') !important;
+  background-image: url('../public/assets/acua.jpg') !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
