@@ -1,5 +1,7 @@
 # Aplicación del Clima
 
+![Vista previa de la aplicación](public/assets/preview.PNG)
+
 Una aplicación web moderna para consultar el clima en tiempo real de cualquier ciudad del mundo, con funcionalidades como ciudades favoritas, pronóstico extendido y visualización de datos meteorológicos.
 
 ##  Tecnologías Utilizadas
