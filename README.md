@@ -34,11 +34,6 @@ npm install
 yarn install
 ```
 
-3. Crea un archivo `.env.local` en la raíz del proyecto y agrega tu API key:
-```env
-NEXT_PUBLIC_WEATHER_API_KEY= 729d536913428102ed055faf12ed693b
-```
-
 ##  Ejecución
 
 Para ejecutar el proyecto en modo desarrollo:
@@ -62,7 +57,14 @@ yarn start
 ```
 
 
-Disponible en: `https://tu-usuario.github.io/app-clima`
+Disponible en: 
+`https://tu-usuario.github.io/app-clima`
+`https://buscador-de-imagenes-react.vercel.app/`
+
+⚠️ **Nota sobre el despliegue:**  
+> Actualmente, el despliegue en producción no es completamente funcional debido a configuraciones adicionales requeridas.
+  
+> Por esta razón, se recomienda clonar el repositorio y ejecutar el proyecto de forma local para asegurar el correcto funcionamiento y poder realizar pruebas sin inconvenientes.
 
 ##  API Key de Prueba
 
